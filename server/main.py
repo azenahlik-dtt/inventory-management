@@ -1,10 +1,10 @@
 import threading
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from typing import List, Optional
 from pydantic import BaseModel, Field
-from mock_data import inventory_items, orders, demand_forecasts, backlog_items, spending_summary, monthly_spending, category_spending, recent_transactions, purchase_orders, restocking_orders
+from mock_data import inventory_items, orders, demand_forecasts, backlog_items, spending_summary, monthly_spending, category_spending, recent_transactions, purchase_orders, restocking_orders, save_restocking_orders
 
 app = FastAPI(title="Factory Inventory Management System")
 
@@ -243,7 +243,9 @@ def create_restocking_order(request: CreateRestockingOrderRequest):
     # The order is only complete when its slowest item arrives, so the
     # order-level lead time is the max across items, not the sum or average
     lead_time_days = max(item["lead_time_days"] for item in order_items)
-    now = datetime.now()
+    # UTC with an explicit offset so the client converts to the viewer's local
+    # time instead of reading a server-local timestamp as if it were theirs
+    now = datetime.now(timezone.utc)
 
     with restocking_order_lock:
         sequence = len(restocking_orders) + 1
@@ -258,6 +260,8 @@ def create_restocking_order(request: CreateRestockingOrderRequest):
             "expected_delivery": (now + timedelta(days=lead_time_days)).isoformat(timespec="seconds"),
         }
         restocking_orders.append(order)
+        # Saved inside the lock so concurrent orders never write interleaved files
+        save_restocking_orders()
     return order
 
 @app.get("/api/restocking-orders", response_model=List[RestockingOrder])

@@ -117,7 +117,7 @@
                   </div>
                 </details>
               </td>
-              <td class="col-value"><strong>{{ currencySymbol }}{{ order.total_cost.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) }}</strong></td>
+              <td class="col-value"><strong>{{ formatSubmittedCost(order.total_cost) }}</strong></td>
               <td class="col-date">{{ t('orders.submittedOrders.days', { count: order.lead_time_days }) }}</td>
               <td class="col-date">{{ formatDate(order.expected_delivery) }}</td>
               <td class="col-status">
@@ -136,11 +136,15 @@ import { ref, onMounted, onUnmounted, watch, computed } from 'vue'
 import { api } from '../api'
 import { useFilters } from '../composables/useFilters'
 import { useI18n } from '../composables/useI18n'
+import { formatCurrencyWithDecimals } from '../utils/currency'
 
 export default {
   name: 'Orders',
   setup() {
     const { t, currentCurrency, translateProductName, translateCustomerName } = useI18n()
+
+    // Display-only conversion for submitted restocking orders (server stores USD; see Restocking.vue)
+    const formatSubmittedCost = (value) => formatCurrencyWithDecimals(value, currentCurrency.value, 2)
 
     const currencySymbol = computed(() => {
       return currentCurrency.value === 'JPY' ? '¥' : '$'
@@ -254,6 +258,7 @@ export default {
       getOrderStatusClass,
       formatDate,
       currencySymbol,
+      formatSubmittedCost,
       translateProductName,
       translateCustomerName
     }

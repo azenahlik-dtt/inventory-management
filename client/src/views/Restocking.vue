@@ -127,6 +127,7 @@
 import { ref, computed, watch, onMounted } from 'vue'
 import { api } from '../api'
 import { useI18n } from '../composables/useI18n'
+import { formatCurrency, formatCurrencyWithDecimals } from '../utils/currency'
 
 export default {
   name: 'Restocking',
@@ -138,8 +139,6 @@ export default {
 
     // Work in integer cents for all budget comparisons to avoid float drift
     const toCents = (amount) => Math.round(amount * 100)
-
-    const currencySymbol = computed(() => (currentCurrency.value === 'JPY' ? '¥' : '$'))
 
     const loading = ref(true)
     const error = ref(null)
@@ -263,12 +262,14 @@ export default {
       edits.value = { ...edits.value, [sku]: { ...edits.value[sku], quantity: n } }
     }
 
-    const formatMoney = (value) =>
-      currencySymbol.value + Math.round(value).toLocaleString()
+    // Display-only currency conversion: the server stores and validates prices in USD, so all
+    // state, budget checks and API payloads stay in USD. Converting the model itself would break
+    // server-side pricing/budget checks; only the rendered strings are converted.
+    const formatMoney = (value) => formatCurrency(value, currentCurrency.value)
 
     // Unit costs keep cents: rounding $42.50 to $43 makes qty x price visibly disagree with the line total
     const formatUnitCost = (value) =>
-      currencySymbol.value + value.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+      formatCurrencyWithDecimals(value, currentCurrency.value, 2)
 
     const formatDate = (dateString) => {
       const d = new Date(dateString)

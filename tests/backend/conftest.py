@@ -22,9 +22,11 @@ def client():
 
 
 @pytest.fixture(autouse=True)
-def reset_restocking_orders():
-    """Clear in-memory restocking orders so POST tests don't leak into each other."""
+def reset_restocking_orders(tmp_path, monkeypatch):
+    """Isolate restocking orders per test: clear the in-memory list and point
+    persistence at a temp file so tests never touch the real orders file."""
     import mock_data
+    monkeypatch.setattr(mock_data, "RESTOCKING_ORDERS_FILE", str(tmp_path / "restocking_orders.json"))
     mock_data.restocking_orders.clear()
     yield
     mock_data.restocking_orders.clear()

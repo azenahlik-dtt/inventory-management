@@ -110,6 +110,46 @@ class TestCreateRestockingOrder:
         assert response.status_code == 422
 
 
+class TestRestockingPersistence:
+    def test_order_is_saved_and_reloadable(self, client):
+        import mock_data
+        created = client.post("/api/restocking-orders", json={
+            "items": [{"sku": "WDG-001", "quantity": 3}]
+        }).json()
+
+        # Simulates a server restart: reading the file yields the same order
+        reloaded = mock_data.load_restocking_orders()
+        assert [o["order_number"] for o in reloaded] == [created["order_number"]]
+
+    def test_missing_file_loads_as_empty(self):
+        import mock_data
+        assert mock_data.load_restocking_orders() == []
+
+    def test_rejected_order_is_not_saved(self, client):
+        import mock_data
+        client.post("/api/restocking-orders", json={"items": [{"sku": "NOPE-000", "quantity": 1}]})
+        assert mock_data.load_restocking_orders() == []
+
+    def test_no_temp_file_left_behind(self, client):
+        import os
+        import mock_data
+        client.post("/api/restocking-orders", json={"items": [{"sku": "WDG-001", "quantity": 1}]})
+        assert not os.path.exists(mock_data.RESTOCKING_ORDERS_FILE + ".tmp")
+
+
+class TestRestockingTimestamps:
+    def test_timestamps_are_utc_with_offset(self, client):
+        from datetime import datetime
+        data = client.post("/api/restocking-orders", json={
+            "items": [{"sku": "GSK-203", "quantity": 1}]
+        }).json()
+
+        submitted = datetime.fromisoformat(data["submitted_date"])
+        expected = datetime.fromisoformat(data["expected_delivery"])
+        assert submitted.utcoffset() is not None
+        assert (expected - submitted).days == data["lead_time_days"]
+
+
 class TestGetRestockingOrders:
     def test_empty_by_default(self, client):
         response = client.get("/api/restocking-orders")
