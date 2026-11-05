@@ -75,11 +75,64 @@
         </div>
       </div>
     </div>
+
+    <!-- Submitted restocking orders: independent of shared filters and of the main orders loading/error state -->
+    <div class="card submitted-orders">
+      <div class="card-header">
+        <h3 class="card-title">{{ t('orders.submittedOrders.title') }} ({{ restockingOrders.length }})</h3>
+        <button class="refresh-btn" :disabled="restockingLoading" @click="loadRestockingOrders">
+          {{ t('orders.submittedOrders.refresh') }}
+        </button>
+      </div>
+      <div v-if="restockingError" class="error">{{ restockingError }}</div>
+      <div v-else-if="restockingLoading" class="loading">{{ t('common.loading') }}</div>
+      <div v-else-if="restockingOrders.length === 0" class="empty-state">{{ t('orders.submittedOrders.empty') }}</div>
+      <div v-else class="table-container">
+        <table class="orders-table">
+          <thead>
+            <tr>
+              <th class="col-order-number">{{ t('orders.submittedOrders.table.orderNumber') }}</th>
+              <th class="col-date">{{ t('orders.submittedOrders.table.submittedDate') }}</th>
+              <th class="col-items">{{ t('orders.submittedOrders.table.items') }}</th>
+              <th class="col-value">{{ t('orders.submittedOrders.table.totalCost') }}</th>
+              <th class="col-date">{{ t('orders.submittedOrders.table.leadTime') }}</th>
+              <th class="col-date">{{ t('orders.submittedOrders.table.expectedDelivery') }}</th>
+              <th class="col-status">{{ t('orders.submittedOrders.table.status') }}</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr v-for="order in restockingOrders" :key="order.id">
+              <td class="col-order-number"><strong>{{ order.order_number }}</strong></td>
+              <td class="col-date">{{ formatDate(order.submitted_date) }}</td>
+              <td class="col-items">
+                <details class="items-details">
+                  <summary class="items-summary">
+                    {{ t('orders.itemsCount', { count: order.items.length }) }}
+                  </summary>
+                  <div class="items-dropdown">
+                    <div v-for="item in order.items" :key="item.sku" class="item-entry">
+                      <span class="item-name">{{ translateProductName(item.name) }}</span>
+                      <span class="item-meta">{{ t('orders.submittedOrders.itemMeta', { sku: item.sku, quantity: item.quantity }) }}</span>
+                    </div>
+                  </div>
+                </details>
+              </td>
+              <td class="col-value"><strong>{{ currencySymbol }}{{ order.total_cost.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) }}</strong></td>
+              <td class="col-date">{{ t('orders.submittedOrders.days', { count: order.lead_time_days }) }}</td>
+              <td class="col-date">{{ formatDate(order.expected_delivery) }}</td>
+              <td class="col-status">
+                <span class="badge info">{{ t(`status.${String(order.status).toLowerCase()}`) }}</span>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
   </div>
 </template>
 
 <script>
-import { ref, onMounted, watch, computed } from 'vue'
+import { ref, onMounted, onUnmounted, watch, computed } from 'vue'
 import { api } from '../api'
 import { useFilters } from '../composables/useFilters'
 import { useI18n } from '../composables/useI18n'
@@ -95,6 +148,11 @@ export default {
     const loading = ref(true)
     const error = ref(null)
     const orders = ref([])
+
+    // Submitted restocking orders (separate state so failures don't affect the main table)
+    const restockingOrders = ref([])
+    const restockingLoading = ref(true)
+    const restockingError = ref(null)
 
     // Use shared filters
     const {
@@ -146,20 +204,52 @@ export default {
     const formatDate = (dateString) => {
       const { currentLocale } = useI18n()
       const locale = currentLocale.value === 'ja' ? 'ja-JP' : 'en-US'
-      return new Date(dateString).toLocaleDateString(locale, {
+      const date = new Date(dateString)
+      if (isNaN(date.getTime())) return dateString
+      return date.toLocaleDateString(locale, {
         year: 'numeric',
         month: 'short',
         day: 'numeric'
       })
     }
 
-    onMounted(loadOrders)
+    // Loaded on mount, on manual refresh and when the tab regains visibility; intentionally not tied to the shared filters
+    const loadRestockingOrders = async () => {
+      try {
+        restockingLoading.value = true
+        restockingError.value = null
+        restockingOrders.value = await api.getRestockingOrders()
+      } catch (err) {
+        restockingError.value = t('orders.submittedOrders.loadFailed') + ': ' + err.message
+      } finally {
+        restockingLoading.value = false
+      }
+    }
+
+    // Refetch when the user returns to this tab so the list doesn't go stale
+    const onVisibilityChange = () => {
+      if (document.visibilityState === 'visible') loadRestockingOrders()
+    }
+
+    onMounted(() => {
+      loadOrders()
+      loadRestockingOrders()
+      document.addEventListener('visibilitychange', onVisibilityChange)
+    })
+
+    onUnmounted(() => {
+      document.removeEventListener('visibilitychange', onVisibilityChange)
+    })
 
     return {
       t,
       loading,
       error,
       orders,
+      restockingOrders,
+      restockingLoading,
+      restockingError,
+      loadRestockingOrders,
       getOrdersByStatus,
       getOrderStatusClass,
       formatDate,
@@ -201,6 +291,31 @@ export default {
 
 .col-value {
   width: 120px;
+}
+
+.refresh-btn {
+  padding: 0.25rem 0.75rem;
+  background: white;
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+  color: #0f172a;
+  font-size: 0.813rem;
+  cursor: pointer;
+}
+
+.refresh-btn:disabled {
+  color: #94a3b8;
+  cursor: not-allowed;
+}
+
+.submitted-orders {
+  margin-top: 1.5rem;
+}
+
+.empty-state {
+  padding: 2rem;
+  text-align: center;
+  color: #64748b;
 }
 
 /* Items details styling */

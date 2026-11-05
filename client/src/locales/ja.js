@@ -6,6 +6,7 @@ export default {
     orders: '注文',
     finance: '財務',
     demandForecast: '需要予測',
+    restocking: '補充発注',
     companyName: '触媒コンポーネンツ',
     subtitle: '在庫管理システム'
   },
@@ -112,6 +113,23 @@ export default {
     onTimeDelivery: '定時配達',
     itemsCount: '{count}件',
     quantity: '数量',
+    submittedOrders: {
+      title: '発注済み注文',
+      empty: '補充発注はまだありません。',
+      loadFailed: '発注済み注文の読み込みに失敗しました',
+      refresh: '更新',
+      itemMeta: '{sku} × {quantity}',
+      days: '{count}日',
+      table: {
+        orderNumber: '注文番号',
+        submittedDate: '発注日',
+        items: '品目',
+        totalCost: '合計費用',
+        leadTime: 'リードタイム',
+        expectedDelivery: '納品予定日',
+        status: 'ステータス'
+      }
+    },
     table: {
       orderNumber: '注文番号',
       orderId: '注文ID',
@@ -188,6 +206,41 @@ export default {
     }
   },
 
+  // 補充発注
+  restocking: {
+    title: '補充発注',
+    description: '予測需要の不足分に基づき、予算内で発注を計画します',
+    budget: '補充予算',
+    budgetMax: '上限: {amount}',
+    recommendedItems: '推奨品目',
+    selectedTotal: '選択合計',
+    remainingBudget: '残り予算',
+    leadTime: '想定リードタイム',
+    selectedItems: '選択品目数',
+    days: '{count}日',
+    placeOrder: '発注する',
+    placing: '発注中...',
+    overBudget: '選択合計が予算を超えています。',
+    noRecommendations: 'この予算で推奨できる品目はありません。',
+    orderPlaced: '発注が完了しました',
+    orderNumber: '注文番号 {number}',
+    expectedDelivery: '納品予定日: {date}',
+    leadTimeLine: 'リードタイム: {days}日',
+    viewOrders: '注文を表示',
+    submitFailed: '発注に失敗しました',
+    loadFailed: '予測データの読み込みに失敗しました',
+    table: {
+      select: '選択',
+      item: '品目',
+      supplier: 'サプライヤー',
+      trend: 'トレンド',
+      quantity: '数量',
+      unitCost: '単価',
+      lineTotal: '小計',
+      leadTime: 'リードタイム'
+    }
+  },
+
   // Filters
   filters: {
     timePeriod: '期間',
@@ -201,6 +254,7 @@ export default {
   // Statuses
   status: {
     delivered: '配達済み',
+    submitted: '発注済み',
     shipped: '出荷済み',
     processing: '処理中',
     backordered: 'バックオーダー',
@@ -328,6 +382,14 @@ export default {
 
   // Product Names
   productNames: {
+    // Demand-forecast items (used by the Restocking page)
+    'Industrial Widget Type A': '産業用ウィジェット タイプA',
+    'Steel Bearing Assembly': 'スチールベアリングアセンブリ',
+    'High-Temperature Gasket': '耐熱ガスケット',
+    'Electric Motor 5HP': '電動モーター 5HP',
+    'Oil Filter Cartridge': 'オイルフィルターカートリッジ',
+    'Pressure Relief Valve': '圧力リリーフバルブ',
+    'Logic Controller Board': 'ロジックコントローラーボード',
     'Single Layer PCB Assembly': '単層PCB組立',
     'Dual Layer PCB Assembly': '二層PCB組立',
     'Multi Layer PCB Assembly': '多層PCB組立',

@@ -35,5 +35,9 @@ recent_transactions = load_json_file('transactions.json')
 # Load purchase orders
 purchase_orders = load_json_file('purchase_orders.json')
 
+# Restocking orders are created at runtime via the API; held in memory only
+# (lost on restart, like every other dataset here)
+restocking_orders = []
+
 # All data is now loaded from JSON files in the data/ directory
 # This allows for easier maintenance and updates of the sample data

@@ -21,6 +21,15 @@ def client():
         yield test_client
 
 
+@pytest.fixture(autouse=True)
+def reset_restocking_orders():
+    """Clear in-memory restocking orders so POST tests don't leak into each other."""
+    import mock_data
+    mock_data.restocking_orders.clear()
+    yield
+    mock_data.restocking_orders.clear()
+
+
 @pytest.fixture
 def sample_inventory_item():
     """Sample inventory item for testing."""
