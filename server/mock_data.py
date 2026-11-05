@@ -35,5 +35,27 @@ recent_transactions = load_json_file('transactions.json')
 # Load purchase orders
 purchase_orders = load_json_file('purchase_orders.json')
 
+# Restocking orders are created at runtime via the API. Unlike the seed data
+# above they are persisted to a gitignored file so they survive a restart.
+RESTOCKING_ORDERS_FILE = os.path.join(DATA_DIR, 'restocking_orders.json')
+
+def load_restocking_orders():
+    """Load saved restocking orders; a missing file just means none yet"""
+    try:
+        with open(RESTOCKING_ORDERS_FILE, 'r') as f:
+            return json.load(f)
+    except FileNotFoundError:
+        return []
+
+def save_restocking_orders():
+    """Write orders to disk via a temp file + rename so a crash mid-write
+    cannot leave a truncated JSON file that breaks the next startup"""
+    tmp_path = RESTOCKING_ORDERS_FILE + '.tmp'
+    with open(tmp_path, 'w') as f:
+        json.dump(restocking_orders, f, indent=2)
+    os.replace(tmp_path, RESTOCKING_ORDERS_FILE)
+
+restocking_orders = load_restocking_orders()
+
 # All data is now loaded from JSON files in the data/ directory
 # This allows for easier maintenance and updates of the sample data

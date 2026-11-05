@@ -53,3 +53,7 @@ logs/
 
 # Environment variables
 .env
+
+# Runtime-created restocking orders (persisted by the API)
+server/data/restocking_orders.json
+server/data/restocking_orders.json.tmp
