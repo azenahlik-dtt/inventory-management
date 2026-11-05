@@ -301,6 +301,67 @@ export default {
     tokyo: '東京'
   },
 
+  // Reports
+  reports: {
+    title: 'パフォーマンスレポート',
+    description: '四半期ごとの業績指標と月次トレンドを表示',
+    loading: 'レポートを読み込み中...',
+    loadFailed: 'レポートの読み込みに失敗しました',
+    empty: '選択したフィルターに一致するレポートデータがありません',
+    quarterLabel: '{year}年第{quarter}四半期',
+    monthLabel: '{year}年{month}',
+    notAvailable: '該当なし',
+    quarterly: {
+      title: '四半期パフォーマンス',
+      quarter: '四半期',
+      totalOrders: '総注文数',
+      totalRevenue: '総売上',
+      avgOrderValue: '平均注文額',
+      fulfillmentRate: '出荷達成率'
+    },
+    trend: {
+      title: '月次売上トレンド'
+    },
+    mom: {
+      title: '前月比分析',
+      month: '月',
+      orders: '注文数',
+      revenue: '売上',
+      change: '増減額',
+      growthRate: '成長率'
+    },
+    stats: {
+      totalRevenue: '総売上',
+      avgMonthlyRevenue: '月平均売上',
+      totalOrders: '総注文数',
+      bestQuarter: '最も好調な四半期'
+    }
+  },
+
+  // Backlog
+  backlog: {
+    title: 'バックログ管理',
+    description: '在庫不足の追跡と解消',
+    loading: 'バックログを読み込み中...',
+    loadFailed: 'バックログの読み込みに失敗しました',
+    totalItems: 'バックログ総件数',
+    cardTitle: 'バックログ項目',
+    empty: 'バックログ項目はありません - すべての注文を履行できます！',
+    orderId: '注文ID',
+    sku: 'SKU',
+    itemName: '商品名',
+    quantityNeeded: '必要数量',
+    quantityAvailable: '利用可能数量',
+    shortage: '不足数',
+    daysDelayed: '遅延日数',
+    priority: '優先度',
+    highPriority: '優先度：高',
+    mediumPriority: '優先度：中',
+    lowPriority: '優先度：低',
+    unitsShort: '{count}単位不足',
+    days: '{count}日'
+  },
+
   // Months
   months: {
     jan: '1月',
